@@ -33,6 +33,12 @@
     footer { text-align:center; padding:2rem 1rem 3rem; color:var(--sub); font-size:.8rem; }
     .badges { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.75rem; }
     .badge { background:#1e252d; padding:.3rem .6rem; border-radius:20px; font-size:.7rem; letter-spacing:.5px; text-transform:uppercase; color:var(--sub); }
+    .anim-grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+    .anim-card { background:var(--panel); border:1px solid #262b33; border-radius:var(--radius); padding:0.85rem 0.85rem 1rem; display:flex; flex-direction:column; gap:.55rem; }
+    .anim-card h3 { margin:0; font-size:.9rem; line-height:1.2; }
+    .anim-card p { margin:0; font-size:.7rem; color:var(--sub); }
+    .anim-card video { width:100%; aspect-ratio:16/9; background:#000; border-radius:6px; display:block; }
+    .anim-card footer { margin-top:auto; }
     @media (max-width:520px){
       ul.files li { flex-direction:column; align-items:flex-start; }
       a.dl-btn { width:100%; justify-content:center; margin-left:0; }
@@ -50,21 +56,12 @@
   </header>
 
   <main>
-    <section aria-labelledby="files-h">
-      <h2 id="files-h">Files</h2>
-      <ul class="files" id="file-list">
-        <!-- Populated by inline JSON below -->
-      </ul>
-      <p style="margin-top:1.25rem; color:var(--sub); font-size:.8rem;">
-        If clicking doesn’t start a download, right-click → Save link as…
+    <section aria-labelledby="animations-h">
+      <h2 id="animations-h">Animations</h2>
+      <div id="animation-grid" class="anim-grid"></div>
+      <p style="margin:.75rem 0 0; color:var(--sub); font-size:.7rem;">
+        Add more animations by pushing objects into the animations array in the script.
       </p>
-    </section>
-
-    <section aria-labelledby="checksums-h">
-      <h2 id="checksums-h">Checksums</h2>
-      <pre id="checksum-box" style="background:#1d232b; padding:1rem; border-radius:6px; overflow:auto; font-family:var(--mono); font-size:.75rem; margin:0;">
-Loading checksums...
-      </pre>
     </section>
   </main>
 
@@ -73,44 +70,34 @@ Loading checksums...
   </footer>
 
   <script>
-    // Configuration for your downloadable files (relative paths inside repo)
-    const files = [
-      { path: 'downloads/report.pdf', label: 'Technical Report (PDF)', size: '1.2 MB', version: '1.0', sha256: 'report.pdf.sha256' },
-      { path: 'downloads/dataset.zip', label: 'Dataset (ZIP)', size: '25.4 MB', version: '2024-09', sha256: 'dataset.zip.sha256' },
-      { path: 'downloads/script.py', label: 'Helper Script (PY)', size: '8 KB', version: '1.0', sha256: null }
+    // Animation configuration (add more objects as needed)
+    const animations = [
+      {
+        src: 'animations/mdistrflowv3;m=250000;lam=1.0e-5;act=relu;T=Float64;MF=F;rep=F;n=3;lrn=0.01;opt=Descent;tepos=2000step=10;polar=F.mp4',
+        title: 'mdistrflowv3 (m=250000, λ=1e-5, act=ReLU, n=3, lr=0.01, opt=Descent)',
+        description: 'Evolution of 250 000 neurons in a ReLU network.'
+      }
+      // Example template for adding more:
+      // { src:'animations/another.mp4', title:'Short Title', description:'Short description.' }
     ];
 
-    // Render file list
-    const ul = document.getElementById('file-list');
-    files.forEach(f => {
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <span class="fname">${f.label}</span>
-        <span class="meta">${f.size} • v${f.version}</span>
-        <a class="dl-btn" href="${f.path}" download>
-          <span>Download</span>
-        </a>
-      `;
-      ul.appendChild(li);
-    });
-
-    // Load and show checksums if present
-    async function loadChecksums(){
-      const lines = [];
-      for (const f of files) {
-        if (!f.sha256) continue;
-        try {
-          const txt = await fetch(f.path.replace(/[^/]+$/, '') + f.sha256).then(r=> r.ok ? r.text() : '');
-          if (txt) {
-            // Common format: "<hash>  filename"
-            const hash = txt.trim().split(/\s+/)[0];
-            lines.push(`${hash}  ${f.path.split('/').pop()}`);
-          }
-        } catch {}
-      }
-      document.getElementById('checksum-box').textContent = lines.length ? lines.join('\n') : 'No checksum files found.';
-    }
-    loadChecksums();
+    // Render animations
+    (function renderAnimations(){
+      const host = document.getElementById('animation-grid');
+      animations.forEach(a => {
+        const card = document.createElement('article');
+        card.className = 'anim-card';
+        card.innerHTML = `
+          <video controls playsinline preload="metadata" src="${a.src}" title="${a.title}" muted></video>
+          <h3>${a.title}</h3>
+          <p>${a.description}</p>
+          <footer>
+            <a href="${a.src}" download style="color:var(--accent); font-size:.65rem; text-decoration:none;">Download MP4</a>
+          </footer>
+        `;
+        host.appendChild(card);
+      });
+    })();
 
     // Build date
     document.getElementById('build-date').textContent = new Date().toISOString().slice(0,10);
